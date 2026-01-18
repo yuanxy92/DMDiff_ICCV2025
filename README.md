@@ -4,10 +4,10 @@
 
 <a href="https://arxiv.org/abs/2506.22753">
   <img src="https://img.shields.io/badge/ArXiv-2506.22753-red">
-</a>
+</a>&nbsp&nbsp&nbsp&nbsp
 <a href="https://dmdiff.github.io/">
   <img src="https://img.shields.io/badge/Project-Page-green.svg" />
-</a>
+</a>&nbsp&nbsp&nbsp&nbsp
 <a href="https://pan.sjtu.edu.cn/web/share/ebafd0ff28a601db09b58744a5b914d1">
   <img src="https://img.shields.io/badge/Data-Download-blue.svg" />
 </a>
