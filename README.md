@@ -2,13 +2,20 @@
 
 <div align="center">
 
-<a href="https://arxiv.org/abs/2506.22753">
+<!-- <a href="https://arxiv.org/abs/2506.22753">
   <img src="https://img.shields.io/badge/ArXiv-2506.22753-red">
 </a>&nbsp&nbsp&nbsp&nbsp<a href="https://dmdiff.github.io/">
   <img src="https://img.shields.io/badge/Project-Page-green.svg" />
 </a>&nbsp&nbsp&nbsp&nbsp<a href="https://pan.sjtu.edu.cn/web/share/ebafd0ff28a601db09b58744a5b914d1">
   <img src="https://img.shields.io/badge/Data-Download-blue.svg" />
-</a>
+</a> -->
+
+[![arXiv](https://img.shields.io/badge/ArXiv-2506.22753-red)](https://arxiv.org/abs/2506.22753)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![Project Page](https://img.shields.io/badge/Project-Page-green.svg)](https://dmdiff.github.io/)
+&nbsp;&nbsp;&nbsp;&nbsp;
+[![Data Download](https://img.shields.io/badge/Data-Download-blue.svg)](https://pan.sjtu.edu.cn/web/share/ebafd0ff28a601db09b58744a5b914d1)
+
 
 [Jianing Zhang]()<sup>2,3</sup>, [Jiayi Zhu]()<sup>1</sup>, [Feiyu Ji]()<sup>1</sup>, [Xiaokang Yang]()<sup>1</sup>, [Xiaoyun Yuan]()<sup>1\*</sup>
 
