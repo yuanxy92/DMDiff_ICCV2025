@@ -27,6 +27,7 @@ We have released the code. Our implementation is based on the <a href="https://g
 
 :star: If DMDiff is helpful for you, please help star this repo. Thanks! :hugs:
 
+:star: Since our code has been re-tuned, retrained, and evaluated on the updated version of the dataset, the reported metrics may differ slightly from those presented in the paper. Thanks! :hugs:
 
 ## :book: Table Of Contents
 
@@ -112,9 +113,9 @@ sh run_training.sh
 
 ## <a name="inference"></a> 💫 Inference
 
-#### Step1: Download datasets for inference
+#### Step1: Download [datasets](https://pan.sjtu.edu.cn/web/share/ebafd0ff28a601db09b58744a5b914d1) for inference
 
-#### Step2: Download the pretrained models
+#### Step2: Download the [pretrained models](https://pan.sjtu.edu.cn/web/share/ebafd0ff28a601db09b58744a5b914d1)
 
 Download the pretrained [SD-Turbo](https://huggingface.co/stabilityai/sd-turbo) model
 
