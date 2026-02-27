@@ -206,25 +206,10 @@ def main(args):
     # start the training loop
     global_step = 0
     args.neg_prob = 0.1
-    super_prob = 0.7
+    super_prob = 0.3
     for epoch in range(0, args.num_training_epochs):
         for step, batch in enumerate(dl_train):
-            if global_step < 5:
-                args.neg_prob = 1
-            else:
-                args.neg_prob = 0.1
-            if global_step < 500:
-                super_prob = 0.75
-            if global_step < 1000:
-                super_prob = 0.6
-            if global_step < 1500:
-                super_prob = 0.5
-            if global_step < 2000:
-                super_prob = 0.4
-            if global_step > 2000:
-                super_prob = 0.3
             
-
             l_acc = [net_sr]
             with accelerator.accumulate(*l_acc):
                 x_src, x_tgt, x_ori_size_src,x_tgt2 = degradation_proc(config, batch, accelerator.device)

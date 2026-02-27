@@ -71,8 +71,8 @@ def parse_args_paired_training(input_args=None):
     parser.add_argument("--seed", type=int, default=None, help="A seed for reproducible training.")
     parser.add_argument("--resolution", type=int, default=512,)
     parser.add_argument("--train_batch_size", type=int, default=4, help="Batch size (per device) for the training dataloader.")
-    parser.add_argument("--num_training_epochs", type=int, default=50)
-    parser.add_argument("--max_train_steps", type=int, default=50000,)
+    parser.add_argument("--num_training_epochs", type=int, default=100)
+    parser.add_argument("--max_train_steps", type=int, default=100000,)
     parser.add_argument("--checkpointing_steps", type=int, default=500,)
     parser.add_argument("--gradient_accumulation_steps", type=int, default=4, help="Number of updates steps to accumulate before performing a backward/update pass.",)
     parser.add_argument("--gradient_checkpointing", action="store_true",)
@@ -118,6 +118,78 @@ def parse_args_paired_training(input_args=None):
 
     return args
 
+def add_combined_noise_torch(
+    image,
+    pseudo_mask,
+    stddev=0.1,
+    scale=0.3,
+    sparsity=0.5,
+    gan=0.4,
+    poisson_weight=0.4,
+    poisson_L=30,
+    brightness_sensitive=True
+):
+    """
+    对 torch.Tensor 图像添加组合噪声（高斯 + 泊松 + 稀疏 + 亮度调节）
+
+    Args:
+        image (Tensor): [C,H,W] 或 [B,C,H,W]，值范围 [0,1]
+        stddev (float): 高斯噪声标准差
+        scale (float): 控制块状程度
+        sparsity (float): 0~1，控制稀疏性
+        gan (float): 高斯噪声强度
+        poisson_weight (float): 泊松噪声强度
+        poisson_L (float): 泊松噪声放大系数（越小噪声越大）
+        brightness_sensitive (bool): 是否基于亮度调整噪声强度
+    Returns:
+        Tensor: 噪声后的图像，值范围 [0,1]
+    """
+
+    is_batched = image.dim() == 4
+    if not is_batched:
+        image = image.unsqueeze(0)
+
+    B, C, H, W = image.shape
+    h_small, w_small = max(1, int(H * scale)), max(1, int(W * scale))
+
+    # === 亮度感知掩码 ===
+    if brightness_sensitive:
+        with torch.no_grad():
+            gray = image.mean(dim=1, keepdim=True)  # [B,1,H,W]
+            brightness_factor = 1.0 - gray  # 暗处值大，亮处值小
+            brightness_factor = torch.nn.functional.interpolate(brightness_factor, size=(h_small, w_small), mode='bilinear', align_corners=False)
+    else:
+        brightness_factor = torch.ones((B, 1, h_small, w_small), device=image.device)
+
+    # === 高斯噪声 ===
+    noise = torch.randn((B, C, h_small, w_small), device=image.device) * stddev
+    if sparsity is not None:
+        mask = (torch.rand((B, 1, h_small, w_small), device=image.device) < sparsity).float()
+        noise *= mask
+    noise *= brightness_factor
+    noise = torch.nn.functional.interpolate(noise, size=(H, W), mode='bilinear', align_corners=False)
+    gauss_noisy = gan * noise
+
+    # === 泊松噪声 ===
+    poisson_input = torch.clamp(image * poisson_L, min=0)
+    poisson_noise = (torch.poisson(poisson_input) / poisson_L) - image
+    if brightness_sensitive:
+        poisson_noise *= torch.nn.functional.interpolate(brightness_factor, size=(H, W), mode='bilinear', align_corners=False)
+
+    
+
+    poisson_noisy = poisson_weight * poisson_noise
+    total_noise = gauss_noisy + poisson_noisy
+
+    if pseudo_mask is not None:
+        pseudo_mask = pseudo_mask.view(B, 1, 1, 1).float()  # [B,1,1,1]
+        total_noise = total_noise * pseudo_mask
+
+    # === 合成并裁剪 ===
+    noisy_image = image + total_noise
+    noisy_image = torch.clamp(noisy_image, 0.0, 1.0)
+
+    return noisy_image if is_batched else noisy_image.squeeze(0)
 
 # @DATASET_REGISTRY.register(suffix='basicsr')
 class PairedDataset(data.Dataset):
@@ -167,7 +239,8 @@ class PairedDataset(data.Dataset):
             else:
                 for path in opt['gt_path']:
                     self.paths.extend(sorted([str(x) for x in Path(path).rglob('*.' + opt['image_type'])]))
-            gt_path2 = opt['gt_path'].replace('gt','gt_blur')
+            import os
+            gt_path2 = opt['gt_path'].replace('gt','gt_blur') if 'train' in os.path.basename(os.path.normpath(opt['gt_path'])) else opt['gt_path']
             self.paths2.extend(sorted([str(x) for x in Path(gt_path2).rglob('*.' + opt['image_type'])]))
         
         if 'lr_path' in opt:
@@ -315,6 +388,18 @@ class PairedDataset(data.Dataset):
         img_gt = img2tensor([img_gt], bgr2rgb=True, float32=True)[0]
         img_gt2 = img2tensor([img_gt2], bgr2rgb=True, float32=True)[0]
         img_lr = img2tensor([img_lr], bgr2rgb=True, float32=True)[0]
+        if 'pseudo' in Path(lr_path).resolve().name.lower() and random.random() < 0.6:
+            img_lr = add_combined_noise_torch(
+            img_lr,
+            None,
+            stddev=random.uniform(0.1, 0.4),
+            gan=random.uniform(0.1, 0.5),
+            poisson_weight=random.uniform(0.1, 0.4),
+            sparsity=random.uniform(0.2, 0.5),
+            scale=random.uniform(0.2, 0.5),
+            brightness_sensitive=True
+        )
+        
         kernel = torch.FloatTensor(kernel)
         kernel2 = torch.FloatTensor(kernel2)
 
@@ -358,13 +443,14 @@ def degradation_proc(configs, batch, device, val=False, use_usm=False, resize_lq
     #im_lq = torch.clamp(out, 0, 1.0)
     im_lq = torch.clamp(im_lr, 0, 1.0)
     ori_lq = im_lq
-    # mode = 'bilinear'
-    # ori_lq = F.interpolate(
-    #         ori_lq,
-    #         size=(400,400),
-    #         mode=mode,
-    #         )
-
+    '''
+    mode = 'bilinear'
+    ori_lq = F.interpolate(
+        ori_lq,
+        size=(400,400),
+        mode=mode,
+    )
+    '''
     # random crop
     gt_size = configs.degradation['gt_size']
     #mode = random.choice(['area', 'bilinear', 'bicubic'])

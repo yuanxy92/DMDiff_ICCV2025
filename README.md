@@ -1,4 +1,4 @@
-<h2 align="center">Degradation-Guided One-Step Image Super-Resolution with Diffusion Priors</h2>
+<h2 align="center">Degradation-Modeled Multipath Diffusion for Tunable Metalens Photography</h2>
 
 <div align="center">
 
@@ -44,6 +44,7 @@ We have released the code. Our implementation is based on the <a href="https://g
 
 ## <a name="update"></a>:new: Update
 
+- **2026.2.27**: The checkpoint is released :fire:
 - **2026.1.18**: The code is released :fire:
 <!-- - [**History Updates** >]() -->
 
@@ -63,10 +64,6 @@ We have released the code. Our implementation is based on the <a href="https://g
 
 :star: To tackle the challenges of metalens-based imaging, we propose a degradation-modeled multipath diffusion framework that leverages pretrained large-scale generative diffusion models for tunable metalens photography. Our approach addresses three key challenges: complex metalens degradations, limited paired training data, and hallucinations in generative models. With the powerful natural image priors from the base generative diffusion model, our method reconstructs vivid and realistic images using a small training dataset. To further enhance restoration, we propose a Spatially Varying Degradation-Aware (SVDA) attention module, which quantifies optical aberrations and sensor-induced noise to guide the restoration process. Additionally, we introduce a Degradation-modeled Multipath Diffusion (DMDiff) framework, incorporating positive, neutral, and negative-prompt paths to balance detail enhancement and structural fidelity while mitigating metalens-specific distortions. Finally, we design an instantly tunable decoder, enabling dynamic control over reconstruction quality to suppress hallucinations.
 
-## <a name="visual_comparison"></a>:chart_with_upwards_trend: Visual Comparison
-
-<img src=assets/pic/supp_exp_1.png>
-<img src=assets/pic/supp_exp_2.png>
 
 <!-- </details> -->
 
@@ -95,24 +92,23 @@ We have released the DMDiff dataset. Please download it <a href="https://pan.sjt
 #### Step3: Training for S3Diff
 
 Please modify the paths to training datasets in `configs/sr.yaml`
+Replace lines 27 to 28 of configs/sr.yaml with your actual path.
+```
+gt_path: 'path_to_your_gt_folder/'
+lr_path: 'path_to_your_lr_folder'
+```
+We first train a model to generate pseudo, change line 208 of src/train.py as you need.
+```
+args.neg_prob = 1 for persuo training
+args.neg_prob = 0.1 for normal training
+```
+
 Then run:
 
 ```bash
 sh run_training.sh
 ```
 
-<!-- If you need to conduct offline training, modify `run_training.sh` as follows, and fill in `sd_path` with your local path:
-
-```bash
-accelerate launch --num_processes=4 --gpu_ids="0,1,2,3" --main_process_port 29300 src/train_s3diff.py \
-    --sd_path="path_to_checkpoints/sd-turbo" \
-    --de_net_path="assets/mm-realsr/de_net.pth" \
-    --output_dir="./output" \
-    --resolution=512 \
-    --train_batch_size=4 \
-    --enable_xformers_memory_efficient_attention \
-    --viz_freq 25
-``` -->
 
 ## <a name="inference"></a> 💫 Inference
 
@@ -124,40 +120,22 @@ Download the pretrained [SD-Turbo](https://huggingface.co/stabilityai/sd-turbo) 
 
 Download the pretrained DMDiff model 
 
-#### Step3: Inference for S3Diff
+#### Step3: Inference for DMDiff
 
-Please add the paths to evaluate datasets in `configs/sr.yaml` and the path of GT folder in `run_inference.sh`
+Please add the paths to evaluate datasets in `configs/sr.yaml`
+Replace lines 57 to 58 of configs/sr.yaml with your actual path.
+```
+gt_path: 'path_to_your_gt_folder/'
+lr_path: 'path_to_your_lr_folder'
+```
+
 Then run:
 
 ```bash
 sh run_inference.sh
 ```
 
-<!-- If you need to conduct offline inference, modify `run_inference.sh` as follows, and fill in with your paths:
 
-```bash
-accelerate launch --num_processes=1 --gpu_ids="0," --main_process_port 29300 src/inference_s3diff.py \
-    --sd_path="path_to_checkpoints/sd-turbo" \
-    --de_net_path="assets/mm-realsr/de_net.pth" \
-    --pretrained_path="path_to_checkpoints/s3diff.pkl" \
-    --output_dir="./output" \
-    --ref_path="path_to_ground_truth_folder" \
-    --align_method="wavelet"
-``` -->
-
-<!-- #### Gradio Demo
-
-Please install Gradio first
-```bash
-pip install gradio
-```
-
-Please run the following command to interact with the gradio website, have fun. 🤗
-
-```
-python src/gradio_s3diff.py 
-```
-![s3diff](assets/pic/gradio.png) -->
 
 ## :smiley: Citation
 

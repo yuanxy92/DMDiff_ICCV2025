@@ -24,8 +24,8 @@ degradation:
 
 train:
   queue_size: 180
-  gt_path: ''
-  lr_path: ''
+  gt_path: '/data/jianing/DMDiff_ICCV2025/gt_train/'
+  lr_path: '/data/jianing/DMDiff_ICCV2025/lr_train/'
   num_face: 10000
   crop_size: 512
   io_backend:
@@ -54,8 +54,8 @@ train:
   use_rot: False
 
 validation:
-  gt_path: ''
-  lr_path: ''
+  gt_path: '/data/jianing/DMDiff_ICCV2025/gt_test/'
+  lr_path: '/data/jianing/DMDiff_ICCV2025/lr_test/'
   crop_size: 512
   io_backend:
     type: disk
