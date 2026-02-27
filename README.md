@@ -27,7 +27,7 @@ We have released the code. Our implementation is based on the <a href="https://g
 
 :star: If DMDiff is helpful for you, please help star this repo. Thanks! :hugs:
 
-:star: Since our code has been re-tuned, retrained, and evaluated on the updated version of the dataset, the reported metrics may differ slightly from those presented in the paper. Thanks! :hugs:
+:star: Since our code has been re-tuned, retrained, and evaluated on the updated version of the dataset (7800 train, 7707 test, 10921 pseudo), the reported metrics may differ slightly from those presented in the paper. Thanks! :hugs:
 
 ## :book: Table Of Contents
 
