@@ -51,7 +51,7 @@ We have released the code. Our implementation is based on the <a href="https://g
 
 ## <a name="todo"></a>:hourglass: TODO
 
-- [ ] Release Checkpoints :link:
+- [x] Release Checkpoints :link:
 - [x] Release Code :computer:
 
 ## <a name="abstract"></a>:fireworks: Abstract
